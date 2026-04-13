@@ -172,9 +172,9 @@ function ProceduralBasketball({
 
 export default function BasketballScene(props: BasketballProps) {
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full pointer-events-none">
       <ErrorBoundary>
-        <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 0, 5], fov: 45 }}>
+        <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 0, 5], fov: 45 }} style={{ pointerEvents: 'none' }}>
           <Suspense fallback={null}>
             <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.2}>
               <ProceduralBasketball {...props} />

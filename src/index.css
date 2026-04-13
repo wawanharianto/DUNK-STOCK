@@ -9,12 +9,22 @@
 
 @layer base {
   body {
-    @apply bg-black text-white overflow-x-hidden;
+    @apply bg-black text-white overflow-x-hidden overflow-y-hidden;
+  }
+
+  /* Hide scrollbars for all browsers */
+  html {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  
+  html::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
   }
 }
 
 .red-frame {
-  @apply border-[16px] border-red-accent rounded-[32px] overflow-hidden relative;
+  @apply border-[8px] md:border-[16px] border-red-accent rounded-[16px] md:rounded-[32px] overflow-visible relative;
 }
 
 @keyframes move-bg {

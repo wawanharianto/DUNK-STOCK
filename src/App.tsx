@@ -189,6 +189,9 @@ export default function App() {
   useEffect(() => {
     if (view === 'customize' || isCartOpen) return; // Disable scroll navigation
 
+    let touchStartY = 0;
+    let touchEndY = 0;
+
     const handleWheel = (e: WheelEvent) => {
       if (e.deltaY > 50) {
         if (view === 'hero') setView('info');
@@ -199,12 +202,53 @@ export default function App() {
       }
     };
 
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY = e.changedTouches[0].screenY;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      // Don't navigate if touch target is a button or input
+      const target = e.target as Element;
+      if (target && (
+        target.tagName === 'BUTTON' || 
+        target.closest('button') ||
+        target.tagName === 'INPUT'
+      )) {
+        return;
+      }
+
+      touchEndY = e.changedTouches[0].screenY;
+      const diff = touchStartY - touchEndY;
+      
+      // Swipe up (diff > 0)
+      if (diff > 50) {
+        if (view === 'hero') setView('info');
+        else if (view === 'info') setView('spec');
+      }
+      // Swipe down (diff < 0)
+      else if (diff < -50) {
+        if (view === 'spec') setView('info');
+        else if (view === 'info') setView('hero');
+      }
+    };
+
     window.addEventListener('wheel', handleWheel);
-    return () => window.removeEventListener('wheel', handleWheel);
+    window.addEventListener('touchstart', handleTouchStart, false);
+    window.addEventListener('touchend', handleTouchEnd, false);
+    
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
   }, [view, isCartOpen]);
 
   return (
-    <div className="relative h-screen bg-black overflow-hidden">
+    <div className="relative h-screen bg-black overflow-hidden scrollbar-hide">
+      <style>{`
+        ::-webkit-scrollbar { display: none; }
+        * { scrollbar-width: none; }
+      `}</style>
       {/* Moving Background Elements */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 moving-grid opacity-30" />
@@ -227,7 +271,7 @@ export default function App() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="relative h-full w-full"
+          className={`relative h-full w-full pointer-events-auto ${view === 'customize' ? 'z-50' : 'z-30'}`}
         >
           {view === 'hero' ? (
             <Hero 
@@ -269,7 +313,8 @@ export default function App() {
           opacity: isCartOpen ? 0.2 : 1
         }}
         transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed inset-0 z-40 pointer-events-none"
+        style={{ pointerEvents: view === 'customize' ? 'none' : 'none' }}
+        className={`fixed inset-0 ${view === 'customize' ? 'z-45' : 'z-30'}`}
       >
         <BasketballScene 
           view={view}
@@ -309,6 +354,27 @@ export default function App() {
             />
           ))}
         </div>
+      )}
+
+      {/* Top-Level Add to Cart Button */}
+      {view === 'hero' && (
+        <motion.button 
+          type="button"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.8 }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            addToCart(currentProduct);
+          }}
+          className="fixed left-6 md:left-1/2 bottom-32 md:bottom-48 md:-translate-x-1/2 group relative bg-red-accent px-4 md:px-12 py-2 md:py-5 rounded-sm transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_50px_rgba(230,0,0,0.4)] cursor-pointer pointer-events-auto z-[9999]"
+        >
+          <span className="text-[10px] md:text-[11px] uppercase tracking-[0.2em] font-black text-white">
+            Add to Cart
+          </span>
+          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-sm" />
+        </motion.button>
       )}
     </div>
   );
