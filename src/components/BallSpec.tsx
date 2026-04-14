@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { soundManager } from '../lib/sounds';
 
 export default function BallSpec({ 
   onBackToInfo,
@@ -50,7 +51,7 @@ export default function BallSpec({
       </div>
 
       {/* Technical Data Points */}
-      <div className="relative z-20 w-full h-full max-w-7xl mx-auto px-6 md:px-16 flex flex-col justify-between pt-32 pb-20 md:py-24 pointer-events-none">
+      <div className="relative z-20 w-full h-full max-w-7xl mx-auto px-6 md:px-16 flex flex-col justify-between pt-48 pb-40 md:py-24 pointer-events-none overflow-y-auto scrollbar-hide">
         
         {/* Top Left: Pebble Height */}
         <motion.div 
@@ -77,7 +78,7 @@ export default function BallSpec({
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.7 }}
-          className="absolute left-6 md:left-16 top-[35%] md:top-1/2 -translate-y-1/2"
+          className="absolute left-6 md:left-16 top-[30%] md:top-1/2 -translate-y-1/2"
         >
           <span className="text-[8px] md:text-[9px] uppercase tracking-[0.3em] text-white/30 font-bold">Elevation: {currentProduct.specs.elevation}</span>
         </motion.div>
@@ -105,7 +106,7 @@ export default function BallSpec({
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 1.1 }}
-          className="absolute right-6 md:right-16 top-[65%] md:top-1/2 -translate-y-1/2"
+          className="absolute right-6 md:right-16 top-[60%] md:top-1/2 -translate-y-1/2"
         >
           <span className="text-[8px] md:text-[9px] uppercase tracking-[0.3em] text-white/30 font-bold">Azimuth: {currentProduct.specs.azimuth}</span>
         </motion.div>
@@ -113,9 +114,12 @@ export default function BallSpec({
       </div>
 
       {/* Navigation Controls */}
-      <div className="absolute bottom-8 md:bottom-12 left-8 md:left-16 flex items-center gap-8 z-30">
+      <div className="absolute bottom-6 md:bottom-12 left-6 md:left-16 flex items-center gap-8 z-30">
         <button 
-          onClick={onBackToInfo}
+          onClick={() => {
+            soundManager.playClick();
+            onBackToInfo();
+          }}
           className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] text-white/30 hover:text-red-accent transition-colors cursor-pointer"
         >
           Back to Info

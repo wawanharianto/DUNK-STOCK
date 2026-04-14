@@ -9,22 +9,12 @@
 
 @layer base {
   body {
-    @apply bg-black text-white overflow-x-hidden overflow-y-hidden;
-  }
-
-  /* Hide scrollbars for all browsers */
-  html {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;     /* Firefox */
-  }
-  
-  html::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
+    @apply bg-black text-white overflow-x-hidden;
   }
 }
 
 .red-frame {
-  @apply border-[8px] md:border-[16px] border-red-accent rounded-[16px] md:rounded-[32px] overflow-visible relative;
+  @apply border-[16px] border-red-accent rounded-[32px] overflow-hidden relative;
 }
 
 @keyframes move-bg {
@@ -41,4 +31,14 @@
 .glow-mesh {
   background: radial-gradient(circle at 50% 50%, rgba(230, 0, 0, 0.1) 0%, transparent 50%);
   filter: blur(80px);
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

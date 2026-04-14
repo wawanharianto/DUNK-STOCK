@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import BasketballScene from './Basketball';
+import { soundManager } from '../lib/sounds';
 
 export default function Hero({ 
   currentProduct, 
@@ -17,7 +18,7 @@ export default function Hero({
   onAddToCart: () => void;
 }) {
   return (
-    <section className="red-frame h-screen w-full flex flex-col items-center justify-center bg-black relative overflow-visible">
+    <section className="red-frame h-screen w-full flex flex-col items-center justify-center bg-black relative overflow-hidden">
       <AnimatePresence mode="wait">
         <motion.div 
           key={currentProduct.id}
@@ -28,43 +29,44 @@ export default function Hero({
           className="absolute inset-0 flex items-center justify-center"
         >
           {/* Background Text Layer */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-visible">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
             <motion.div 
               initial={{ opacity: 0, scale: 1.1, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
               className="flex items-center justify-center w-full"
             >
-              <h1 className="text-[11vw] md:text-[24vw] font-display font-bold tracking-tighter leading-none text-[#4A4A4A] uppercase select-none">
+              <h1 className="text-[24vw] md:text-[24vw] font-display font-bold tracking-tighter leading-none text-[#4A4A4A] uppercase select-none">
                 {currentProduct.name}
               </h1>
               {/* Space for the ball */}
               <div className="w-[10vw] md:w-[10vw] shrink-0" />
-              <h1 className="text-[11vw] md:text-[24vw] font-display font-bold tracking-tighter leading-none text-[#4A4A4A] uppercase select-none">
+              <h1 className="text-[24vw] md:text-[24vw] font-display font-bold tracking-tighter leading-none text-[#4A4A4A] uppercase select-none">
                 {currentProduct.suffix}
               </h1>
             </motion.div>
           </div>
 
           {/* UI Elements Overlay */}
-          <div className="absolute inset-0 z-50 pointer-events-auto">
-            <div className="relative h-full w-full px-6 py-10 md:px-16 md:py-20 flex flex-col justify-between pointer-events-none">
+          <div className="absolute inset-0 z-50 pointer-events-none">
+            <div className="relative h-full w-full px-6 py-10 md:px-16 md:py-20 flex flex-col justify-between">
               
               {/* Top Left: Promotion Video */}
               <motion.div 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2, duration: 0.8 }}
-                className="flex items-center gap-3 md:gap-4 pointer-events-auto group cursor-pointer w-fit mt-24 md:mt-24"
+                onClick={() => soundManager.playClick()}
+                className="flex items-center gap-4 pointer-events-auto group cursor-pointer w-fit mt-24 md:mt-24"
               >
-                <div className="w-10 h-10 md:w-10 md:h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-300">
-                  <Play fill="currentColor" className="w-4 h-4 md:w-3.5 md:h-3.5 ml-0.5" />
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-300">
+                  <Play fill="currentColor" className="w-3 h-3 md:w-3.5 md:h-3.5 ml-0.5" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[9px] md:text-[9px] uppercase tracking-[0.1em] font-medium text-white/50 group-hover:text-white transition-colors">
+                  <span className="text-[8px] md:text-[9px] uppercase tracking-[0.1em] font-medium text-white/50 group-hover:text-white transition-colors">
                     Promotion
                   </span>
-                  <span className="text-[9px] md:text-[9px] uppercase tracking-[0.1em] font-medium text-white/50 group-hover:text-white transition-colors">
+                  <span className="text-[8px] md:text-[9px] uppercase tracking-[0.1em] font-medium text-white/50 group-hover:text-white transition-colors">
                     video
                   </span>
                 </div>
@@ -79,48 +81,22 @@ export default function Hero({
                     animate={{ opacity: 1, y: 0 }}
                     className="flex flex-col items-end"
                   >
-                    <span className="text-4xl font-display font-bold text-red-accent leading-none">{currentProduct.price}</span>
-                    <span className="text-[8px] text-white/40 uppercase tracking-widest font-medium">SIZE: {currentProduct.size}</span>
+                    <span className="text-3xl font-display font-bold text-red-accent leading-none">{currentProduct.price}</span>
+                    <span className="text-[7px] text-white/40 uppercase tracking-widest font-medium">SIZE: {currentProduct.size}</span>
                   </motion.div>
                   
-                  <div className="flex gap-3 md:gap-3 relative z-40 pointer-events-auto">
+                  <div className="flex gap-2">
                     <button 
-                      type="button"
-                      onTouchStart={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        prevProduct();
-                      }}
-                      className="w-12 h-12 md:w-10 md:h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer pointer-events-auto"
+                      onClick={(e) => { e.stopPropagation(); prevProduct(); }}
+                      className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
                     >
-                      <ChevronLeft className="w-5 h-5 md:w-4 md:h-4" />
+                      <ChevronLeft className="w-3 h-3" />
                     </button>
                     <button 
-                      type="button"
-                      onTouchStart={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        nextProduct();
-                      }}
-                      className="w-12 h-12 md:w-10 md:h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer pointer-events-auto"
+                      onClick={(e) => { e.stopPropagation(); nextProduct(); }}
+                      className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
                     >
-                      <ChevronRight className="w-5 h-5 md:w-4 md:h-4" />
+                      <ChevronRight className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
@@ -157,6 +133,28 @@ export default function Hero({
                   </motion.div>
                 </div>
 
+                {/* Center Bottom: Add to Cart */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.8 }}
+                  className="absolute left-1/2 bottom-20 md:bottom-32 -translate-x-1/2 pointer-events-auto z-50"
+                >
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      soundManager.playClick();
+                      onAddToCart();
+                    }}
+                    className="group relative bg-red-accent px-8 py-3 md:px-12 md:py-5 rounded-sm transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_50px_rgba(230,0,0,0.4)]"
+                  >
+                    <span className="text-[9px] md:text-[11px] uppercase tracking-[0.2em] font-black text-white">
+                      Add to Cart
+                    </span>
+                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </button>
+                </motion.div>
+
                 {/* Right Side: Slider Controls (Desktop only) */}
                 <motion.div 
                   initial={{ opacity: 0, x: 20 }}
@@ -165,40 +163,14 @@ export default function Hero({
                   className="hidden md:flex gap-2 md:gap-3 pointer-events-auto"
                 >
                   <button 
-                    type="button"
-                    onTouchStart={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      prevProduct();
-                    }}
-                    className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer pointer-events-auto"
+                    onClick={prevProduct}
+                    className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
                   <button 
-                    type="button"
-                    onTouchStart={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      nextProduct();
-                    }}
-                    className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer pointer-events-auto"
+                    onClick={nextProduct}
+                    className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
                   >
                     <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
@@ -209,30 +181,19 @@ export default function Hero({
         </motion.div>
       </AnimatePresence>
 
-      {/* Scroll Indicator - Desktop Only */}
+      {/* Scroll Indicator */}
       <motion.button 
-        type="button"
-        onClick={onNavigateToInfo}
+        onClick={() => {
+          soundManager.playClick();
+          onNavigateToInfo();
+        }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5, duration: 1 }}
-        className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex-col items-center gap-2 cursor-pointer group pointer-events-auto"
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 cursor-pointer group pointer-events-auto"
       >
         <span className="text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-red-accent transition-colors">Scroll</span>
         <div className="w-px h-8 bg-gradient-to-b from-red-accent to-transparent group-hover:h-12 transition-all duration-500" />
-      </motion.button>
-
-      {/* Mobile Scroll Indicator */}
-      <motion.button 
-        type="button"
-        onClick={onNavigateToInfo}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5, duration: 1 }}
-        className="md:hidden absolute bottom-24 right-6 z-30 flex flex-col items-center gap-1 cursor-pointer group pointer-events-auto"
-      >
-        <span className="text-[9px] uppercase tracking-[0.2em] text-white/40 group-hover:text-red-accent transition-colors">Scroll</span>
-        <div className="w-px h-6 bg-gradient-to-b from-red-accent to-transparent group-hover:h-8 transition-all duration-500" />
       </motion.button>
 
       {/* Background Grid/Lines */}

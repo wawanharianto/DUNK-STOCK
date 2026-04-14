@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { X, Trash2, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { soundManager } from '../lib/sounds';
 
 interface CartProps {
   items: any[];
@@ -15,6 +16,7 @@ export default function Cart({ items, onClose, onRemove }: CartProps) {
   }, 0);
 
   const handleCheckout = () => {
+    soundManager.playSwish();
     const doc = new jsPDF();
     
     // Header
@@ -75,7 +77,13 @@ export default function Cart({ items, onClose, onRemove }: CartProps) {
             <h2 className="text-2xl md:text-3xl font-display font-bold uppercase tracking-tighter">Your Bag</h2>
             <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-white/30">({items.length} Items)</span>
           </div>
-          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
+          <button 
+            onClick={() => {
+              soundManager.playClick();
+              onClose();
+            }} 
+            className="text-white/40 hover:text-white transition-colors"
+          >
             <X size={20} className="md:w-6 md:h-6" />
           </button>
         </div>
@@ -107,7 +115,10 @@ export default function Cart({ items, onClose, onRemove }: CartProps) {
                 <div className="flex items-center gap-4 md:gap-8">
                   <span className="text-sm md:text-lg font-display font-bold">{item.price}</span>
                   <button 
-                    onClick={() => onRemove(item.id)}
+                    onClick={() => {
+                      soundManager.playBounce();
+                      onRemove(item.id);
+                    }}
                     className="text-white/20 hover:text-red-500 transition-colors"
                   >
                     <Trash2 size={16} className="md:w-[18px] md:h-[18px]" />

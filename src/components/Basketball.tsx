@@ -1,7 +1,9 @@
-import { useRef, useState, Suspense, Component, ReactNode } from 'react';
+import { useRef, useState, Suspense, Component, ReactNode, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useGLTF, Float, Environment, ContactShadows } from '@react-three/drei';
+import { useGLTF, Float, Environment, ContactShadows, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
+
+import { soundManager } from '../lib/sounds';
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -33,7 +35,7 @@ export interface BasketballProps {
   rotationSpeed?: number;
   textureType?: 'classic' | 'street' | 'tech' | 'cross';
   position?: [number, number, number];
-  view?: 'hero' | 'info' | 'spec' | 'customize';
+  view?: 'hero' | 'info' | 'spec' | 'customize' | 'contact';
 }
 
 function ProceduralBasketball({ 
@@ -66,6 +68,15 @@ function ProceduralBasketball({
     currentPos.current.lerp(targetPos, 0.08);
     meshRef.current.position.copy(currentPos.current);
 
+    // If we are in 'spec' view, we let OrbitControls handle the rotation
+    // But we still want some smooth transition to the initial state
+    if (view === 'spec') {
+      // We don't force rotation here to allow OrbitControls to work
+      // However, we might want to slowly return to a neutral rotation if not interacting?
+      // For now, let's just disable the forced rotation logic for 'spec'
+      return;
+    }
+
     // View-based target rotations
     let targetRotX = 0;
     let targetRotY = 0;
@@ -82,11 +93,11 @@ function ProceduralBasketball({
     if (view === 'info') {
       targetRotY = Math.PI * 0.5;
       targetRotX = 0.2;
-    } else if (view === 'spec') {
-      targetRotY = Math.PI;
-      targetRotX = -0.3;
     } else if (view === 'customize') {
       targetRotY = Math.PI * 1.5;
+    } else if (view === 'contact') {
+      targetRotY = Math.PI * 0.25;
+      targetRotX = -0.2;
     }
 
     // Add mouse influence
@@ -106,6 +117,7 @@ function ProceduralBasketball({
       scale={scale}
       onPointerOver={() => {
         setHover(true);
+        soundManager.playClick();
         document.body.style.cursor = 'pointer';
       }}
       onPointerOut={() => {
@@ -174,9 +186,14 @@ export default function BasketballScene(props: BasketballProps) {
   return (
     <div className="w-full h-full pointer-events-none">
       <ErrorBoundary>
-        <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 0, 5], fov: 45 }} style={{ pointerEvents: 'none' }}>
+        <Canvas 
+          shadows 
+          dpr={[1, 2]} 
+          camera={{ position: [0, 0, 5], fov: 45 }}
+          style={{ pointerEvents: 'auto' }}
+        >
           <Suspense fallback={null}>
-            <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.2}>
+            <Float speed={props.view === 'spec' ? 0 : 1.5} rotationIntensity={0.2} floatIntensity={0.2}>
               <ProceduralBasketball {...props} />
             </Float>
             <Environment preset="studio" />
@@ -187,6 +204,14 @@ export default function BasketballScene(props: BasketballProps) {
               blur={2} 
               far={4} 
             />
+            {props.view === 'spec' && (
+              <OrbitControls 
+                enableZoom={false} 
+                enablePan={false}
+                makeDefault
+                autoRotate={false}
+              />
+            )}
           </Suspense>
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} intensity={2} color={props.color || "#E60000"} />

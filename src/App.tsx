@@ -9,9 +9,12 @@ import Hero from './components/Hero';
 import BallInfo from './components/BallInfo';
 import BallSpec from './components/BallSpec';
 import Customize from './components/Customize';
+import Contact from './components/Contact';
 import Cart from './components/Cart';
 import BasketballScene from './components/Basketball';
 import { motion, AnimatePresence } from 'motion/react';
+import { Volume2, VolumeX } from 'lucide-react';
+import { soundManager } from './lib/sounds';
 
 const products = [
   {
@@ -125,7 +128,7 @@ const products = [
 ];
 
 export default function App() {
-  const [view, setView] = useState<'hero' | 'info' | 'spec' | 'customize'>('hero');
+  const [view, setView] = useState<'hero' | 'info' | 'spec' | 'customize' | 'contact'>('hero');
   const [currentIndex, setCurrentIndex] = useState(0);
   const currentProduct = products[currentIndex];
   const [isMobile, setIsMobile] = useState(false);
@@ -137,6 +140,24 @@ export default function App() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  useEffect(() => {
+    const initSound = () => {
+      soundManager.initialize();
+      window.removeEventListener('click', initSound);
+      window.removeEventListener('touchstart', initSound);
+    };
+    window.addEventListener('click', initSound);
+    window.addEventListener('touchstart', initSound);
+    return () => {
+      window.removeEventListener('click', initSound);
+      window.removeEventListener('touchstart', initSound);
+    };
+  }, []);
+
+  useEffect(() => {
+    soundManager.playWhoosh();
+  }, [view]);
+
   // Customization State
   const [baseColor, setBaseColor] = useState('#E60000');
   const [lineColor, setLineColor] = useState('#050505');
@@ -145,8 +166,17 @@ export default function App() {
   // Cart State
   const [cart, setCart] = useState<any[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  const toggleSound = () => {
+    const newState = !soundEnabled;
+    setSoundEnabled(newState);
+    soundManager.setEnabled(newState);
+    if (newState) soundManager.playClick();
+  };
 
   const addToCart = (product: any, isCustom: boolean = false) => {
+    soundManager.playSwish();
     const uniqueId = `${product.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     const item = isCustom ? {
@@ -172,6 +202,7 @@ export default function App() {
   };
 
   const nextProduct = () => {
+    soundManager.playBounce();
     const nextIdx = (currentIndex + 1) % products.length;
     setCurrentIndex(nextIdx);
     // Reset customization when switching products in hero
@@ -180,6 +211,7 @@ export default function App() {
   };
 
   const prevProduct = () => {
+    soundManager.playBounce();
     const prevIdx = (currentIndex - 1 + products.length) % products.length;
     setCurrentIndex(prevIdx);
     setBaseColor(products[prevIdx].color);
@@ -188,9 +220,6 @@ export default function App() {
 
   useEffect(() => {
     if (view === 'customize' || isCartOpen) return; // Disable scroll navigation
-
-    let touchStartY = 0;
-    let touchEndY = 0;
 
     const handleWheel = (e: WheelEvent) => {
       if (e.deltaY > 50) {
@@ -202,53 +231,50 @@ export default function App() {
       }
     };
 
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartY = e.changedTouches[0].screenY;
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      // Don't navigate if touch target is a button or input
-      const target = e.target as Element;
-      if (target && (
-        target.tagName === 'BUTTON' || 
-        target.closest('button') ||
-        target.tagName === 'INPUT'
-      )) {
-        return;
-      }
-
-      touchEndY = e.changedTouches[0].screenY;
-      const diff = touchStartY - touchEndY;
-      
-      // Swipe up (diff > 0)
-      if (diff > 50) {
-        if (view === 'hero') setView('info');
-        else if (view === 'info') setView('spec');
-      }
-      // Swipe down (diff < 0)
-      else if (diff < -50) {
-        if (view === 'spec') setView('info');
-        else if (view === 'info') setView('hero');
-      }
-    };
-
     window.addEventListener('wheel', handleWheel);
-    window.addEventListener('touchstart', handleTouchStart, false);
-    window.addEventListener('touchend', handleTouchEnd, false);
-    
-    return () => {
-      window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
+    return () => window.removeEventListener('wheel', handleWheel);
   }, [view, isCartOpen]);
 
+  // Touch Swipe Detection
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientY);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientY);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isUpSwipe = distance > minSwipeDistance;
+    const isDownSwipe = distance < -minSwipeDistance;
+
+    if (isUpSwipe) {
+      if (view === 'hero') setView('info');
+      else if (view === 'info') setView('spec');
+    } else if (isDownSwipe) {
+      if (view === 'spec') setView('info');
+      else if (view === 'info') setView('hero');
+    }
+    
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
   return (
-    <div className="relative h-screen bg-black overflow-hidden scrollbar-hide">
-      <style>{`
-        ::-webkit-scrollbar { display: none; }
-        * { scrollbar-width: none; }
-      `}</style>
+    <div 
+      className="relative h-screen bg-black overflow-hidden touch-none"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       {/* Moving Background Elements */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 moving-grid opacity-30" />
@@ -259,6 +285,7 @@ export default function App() {
       {view === 'hero' && (
         <Navbar 
           onCustomize={() => setView('customize')} 
+          onContact={() => setView('contact')}
           cartCount={cart.length}
           onOpenCart={() => setIsCartOpen(true)}
         />
@@ -271,7 +298,7 @@ export default function App() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className={`relative h-full w-full pointer-events-auto ${view === 'customize' ? 'z-50' : 'z-30'}`}
+          className="relative h-full w-full"
         >
           {view === 'hero' ? (
             <Hero 
@@ -292,6 +319,8 @@ export default function App() {
               onBackToInfo={() => setView('info')} 
               currentProduct={currentProduct}
             />
+          ) : view === 'contact' ? (
+            <Contact onBack={() => setView('hero')} />
           ) : (
             <Customize 
               onBack={() => setView('hero')}
@@ -313,8 +342,7 @@ export default function App() {
           opacity: isCartOpen ? 0.2 : 1
         }}
         transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-        style={{ pointerEvents: view === 'customize' ? 'none' : 'none' }}
-        className={`fixed inset-0 ${view === 'customize' ? 'z-45' : 'z-30'}`}
+        className="fixed inset-0 z-10 pointer-events-none"
       >
         <BasketballScene 
           view={view}
@@ -322,13 +350,13 @@ export default function App() {
           lineColor={view === 'customize' ? lineColor : '#050505'}
           textureType={view === 'customize' ? texture : (currentProduct as any).modelType}
           initialScale={isMobile 
-            ? (view === 'hero' ? 0.7 : view === 'info' ? 0.6 : view === 'spec' ? 0.45 : view === 'customize' ? 0.7 : 0.7)
-            : (view === 'hero' ? 1.4 : view === 'info' ? 1.6 : view === 'customize' ? 2.0 : 1.8)
+            ? (view === 'hero' ? 0.6 : view === 'info' ? 0.5 : view === 'spec' ? 0.4 : view === 'customize' ? 0.7 : view === 'contact' ? 0 : 0.6)
+            : (view === 'hero' ? 1.2 : view === 'info' ? 1.4 : view === 'customize' ? 1.6 : view === 'contact' ? 0.4 : 1.5)
           }
           hoverScale={isMobile ? 0.8 : 0.6}
           position={isMobile 
-            ? [0, (view === 'hero' ? -0.4 : view === 'info' ? 1.5 : view === 'spec' ? 0 : view === 'customize' ? 0.8 : 0), 0]
-            : [(view === 'hero' ? 0 : view === 'info' ? 2.8 : view === 'customize' ? 1.8 : 0), 0, 0]
+            ? [0, (view === 'hero' ? -0.4 : view === 'info' ? 1.5 : view === 'spec' ? 0 : view === 'customize' ? 1.4 : view === 'contact' ? 5 : 0), 0]
+            : [(view === 'hero' ? 0 : view === 'info' ? 2.8 : view === 'customize' ? 2.2 : view === 'contact' ? -3.2 : 0), (view === 'contact' ? 2.8 : 0), 0]
           }
         />
       </motion.div>
@@ -349,33 +377,16 @@ export default function App() {
           {(['hero', 'info', 'spec'] as const).map((v) => (
             <button 
               key={v}
-              onClick={() => setView(v)}
+              onClick={() => {
+                soundManager.playClick();
+                setView(v);
+              }}
               className={`w-1 md:w-1.5 h-1 md:h-1.5 rounded-full transition-all duration-500 ${view === v ? 'bg-red-accent h-6 md:h-8' : 'bg-white/20'}`} 
             />
           ))}
         </div>
       )}
 
-      {/* Top-Level Add to Cart Button */}
-      {view === 'hero' && (
-        <motion.button 
-          type="button"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.8 }}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            addToCart(currentProduct);
-          }}
-          className="fixed left-6 md:left-1/2 bottom-32 md:bottom-48 md:-translate-x-1/2 group relative bg-red-accent px-4 md:px-12 py-2 md:py-5 rounded-sm transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_50px_rgba(230,0,0,0.4)] cursor-pointer pointer-events-auto z-[9999]"
-        >
-          <span className="text-[10px] md:text-[11px] uppercase tracking-[0.2em] font-black text-white">
-            Add to Cart
-          </span>
-          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-sm" />
-        </motion.button>
-      )}
     </div>
   );
 }
