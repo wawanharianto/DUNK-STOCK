@@ -216,7 +216,7 @@ export default function Hero({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5, duration: 1 }}
-        className="hidden md:flex absolute bottom-16 left-1/2 -translate-x-1/2 z-30 flex-col items-center gap-2 cursor-pointer group pointer-events-auto"
+        className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex-col items-center gap-2 cursor-pointer group pointer-events-auto"
       >
         <span className="text-[9px] uppercase tracking-[0.3em] text-white/40 group-hover:text-red-accent transition-colors">Scroll</span>
         <div className="w-px h-8 bg-gradient-to-b from-red-accent to-transparent group-hover:h-12 transition-all duration-500" />
